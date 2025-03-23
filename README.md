@@ -1,9 +1,11 @@
 # RD-AD2VLA
 Pre-research on VLA. R(einforcement learning)D(ual stream)-AD's "closed-loop evaluation" and "reinforcement learning" can be reused.
 
-# Status: Early-stage code framework. Core classes and logic are being implemented.  
+# Status
+Early-stage code framework. Core classes and logic are being implemented.  
 
-# Plan: Due to the fact that pre research is updated in spare time, it will be updated module by module from Q1 to Q4 of 2025.
+# Plan
+Due to the fact that pre research is updated in spare time, it will be updated module by module from Q1 to Q4 of 2025.
 
 # Overall
 在之前“端到端+VLM”自动驾驶架构的数据准备、模型升级、模仿强化、闭环评测、压缩部署等匆忙预研与量产准备的基础上，迈向VLA自动驾驶架构的预研工作，聚焦于模型架构设计：以 3DGS 场景表征为信息中枢、通过 Action Token 衔接 CoT-VLA 与 Diffusion 模块。
@@ -96,4 +98,5 @@ RD-AD2VLA/
  ├── minkowski_ops.py # 稀疏卷积优化
  └── fsdp_wrapper.py # PyTorch FSDP 封装
 
-# License: [MIT License](LICENSE)  
+# License
+[MIT License](LICENSE)  
