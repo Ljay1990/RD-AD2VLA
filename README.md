@@ -76,10 +76,12 @@ dataset_config = {
 python train_joint.py \
  --freeze_scene_encoder \
  --lang_aug mix_whisper_albert # 语音文本联合编码
+
 **阶段 2：端到端微调（全参数更新）**
 python finetune_full.py \
  --use_lora # 参数高效微调 \
  --quant 4bit # 4 比特量化部署优化
+
 **阶段 3：基于3DGS环境的强化学习**
 同“端到端+VLM”架构的RD-AD项目PPO实践~
 
