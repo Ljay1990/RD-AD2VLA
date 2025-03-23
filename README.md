@@ -76,30 +76,53 @@ class RD-AD2VLA(nn.Module):
  return trajectory
 
 # Data Format
+
 dataset_config = {
+
  "3D_scene": {
+ 
  "sensors": {
+ 
  "multi_cam": (6, 3, 256, 256), # 环视 6 相机图像
+ 
  "lidar": (100000, 4), # 点云(x,y,z,反射强度)
+ 
  "gaussian_params": { # 3D 高斯初始化参数
+ 
  "positions": (100000, 3),
+ 
  "covariance": (100000, 3, 3),
+ 
  "sem_probs": (100000, 20)
+ 
  }
+
  }
+ 
  },
+ 
  "language": {
+ 
  "instruction": "str", # 自然语言指令
+ 
  "speech_wav": (16000*5,) # 5 秒语音片段
+ 
  },
+ 
  "action": {
+ 
  "trajectory": (51, 3), # 5 秒轨迹（10Hz）
+ 
  "action_token": (64,) # 结构化动作编码
+ 
  }
+ 
 }
 
 # Train Pipeline
+
 三阶段训练策略：
+
 **阶段 1：多模态联合训练（冻结场景编码器）**
 python train_joint.py \
  --freeze_scene_encoder \
@@ -115,17 +138,29 @@ python finetune_full.py \
 
 # Code Organization
 RD-AD2VLA/
+
 ├── models/
+
 │ ├── scene_encoder/ # 3D 场景编码组件
+
 │ ├── decision/ # 多模态决策模块
+
 │ └── diffusion/ # 轨迹生成器
+
 ├── data/
+
 │ ├── hybrid_dataset.py # 混合数据加载器
+
 │ └── transforms/ # 多模态数据增强
+
 ├── configs/ # 训练配置文件
+
 ├── scripts/ # 分布式训练启动脚本
+
 └── utils/
+
  ├── minkowski_ops.py # 稀疏卷积优化
+ 
  └── fsdp_wrapper.py # PyTorch FSDP 封装
 
 # License
