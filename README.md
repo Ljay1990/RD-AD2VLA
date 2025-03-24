@@ -1,5 +1,6 @@
 # RD-AD2VLA
 Pre-research on VLA. R(einforcement learning)D(ual stream)-AD's "closed-loop evaluation" and "reinforcement learning" can be reused.
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15073856.svg)](https://doi.org/10.5281/zenodo.15073856)
 
 # Status
 Early-stage code framework. Core classes and logic are being implemented.  
@@ -125,7 +126,7 @@ dataset_config = {
 
 **阶段 1：多模态联合训练（冻结场景编码器）**
 
-python train_joint.py \
+python train_VLA.py \
  --freeze_scene_encoder \
  --lang_aug mix_whisper_albert # 语音文本联合编码
 
@@ -147,7 +148,7 @@ RD-AD2VLA/
 
 │ ├── scene_encoder/ # 3D 场景编码组件
 
-│ ├── decision/ # 多模态决策模块
+│ ├── CoT-VLA/ # 多模态决策模块
 
 │ └── diffusion/ # 轨迹生成器
 
@@ -163,9 +164,9 @@ RD-AD2VLA/
 
 └── utils/
 
- ├── minkowski_ops.py # 稀疏卷积优化
+│ ├── minkowski_ops.py # 稀疏卷积优化
  
- └── fsdp_wrapper.py # PyTorch FSDP 封装
+│ └── fsdp_wrapper.py # PyTorch FSDP 封装
 
 # License
 [MIT License](LICENSE)  
