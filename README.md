@@ -5,168 +5,111 @@ Pre-research on VLA. R(einforcement learning)D(ual stream)-AD's "closed-loop eva
 # Status
 Early-stage code framework. Core classes and logic are being implemented.  
 
-# Plan
-Due to the fact that pre research is updated in spare time, it will be updated module by module from Q1 to Q4 of 2025.
+# Overall Architecture
+**Flowchart:**
+Multi-camera input → [3D Gaussian Scene Encoder] → 3D Semantic Gaussian Representation  
+                      ↓  
+[System 2: VLM Reasoning Module] → Task Semantic Features + Long-term Path Planning  
+                      ⇵ (Intelligent Mode Switching)  
+[Fast Thinking Mode] → Emergency Action Sequence  
+                      ↓  
+[System 1: DIT + Flow Matching Action Generation] → Vehicle Control Commands (steering angle, throttle, brake, etc.)  
 
-# Overall
-在之前“端到端+VLM”自动驾驶架构的数据准备、模型升级、模仿强化、闭环评测、压缩部署等匆忙预研与量产准备的基础上，迈向VLA自动驾驶架构的预研工作，聚焦于模型架构设计：以 3DGS 场景表征为信息中枢、通过 Action Token 衔接 CoT-VLA 与 Diffusion 模块。
+**Module 1: 3D Gaussian Scene Representation Encoding (GaussianAD 3DGS)**
+***Input:***
+Multi-camera RGB images (6-8 surround-view cameras, resolution 1920×1080@30FPS)
+LiDAR point cloud (optional, for initializing Gaussian centers)
+Navigation map data (vectorized lane topology, speed limits, traffic light coordinates, etc.)
+***Processing Pipeline:***
+1.Gaussian Center Initialization:
+Image features are extracted via a Transformer to generate initial 3D Gaussian centers (x,y,z coordinates).
+LiDAR point clouds or monocular depth estimation refine positional accuracy (error <0.1m).
+2.Attribute Encoding:
+Each Gaussian center carries:
+ Geometric attributes: Covariance matrix (controls ellipsoid shape), opacity.
+ Semantic attributes: Class (vehicle/pedestrian/obstacle), motion states (velocity, acceleration).
+ Physical attributes: Surface material (affects braking distance calculation).
+3.Dynamic Update Mechanism:
+Spatiotemporal Transformer Motion Flow Prediction:
+Motion correlations are modeled across time (5 historical frames) and space (adjacent Gaussian centers) via stacked spatiotemporal attention layers.
+Outputs displacement vector fields (Δx,Δy,Δz) and velocity changes for each Gaussian center over a 2-second horizon.
+***Output:***
+3D Gaussian Scene Tensor (dimension: N×15, where N = number of Gaussian centers; 15 dimensions include coordinates, covariance, semantic labels, etc.).
+Key Semantic Features:
+ Road structure: Lane curvature, drivable area masks.
+ Dynamic objects: Trajectory predictions for surrounding vehicles, pedestrian intent classification (probability distribution).
+ Environmental states: Road friction coefficient estimation, visibility score.
 
-**一、3DGS 场景表征模块的架构设计：**
-
-1.3D 高斯初始化与优化
-
-几何初始化：在自车坐标系内均匀分布N个3D 高斯点，初始参数包含位置μ0、各向异性协方差Σ0、语义概率s0
-
-动态参数预测：通过时空 Transformer 预测每个高斯的运动流 Δμt，建模障碍物运动趋势
-
-2.稀疏特征压缩
-
-重要性剪枝：计算高斯点的语义显著度 S=max (s)⋅ Δμ，保留M个关键点
-
-特征降维：使用 MinkowskiNet 的稀疏 3D 卷积层，将 256 维高斯特征压缩至 512 维全局场景向量 fscene
-
-**二、CoT-VLA 推理决策模块的架构设计：**
-
-1.多模态对齐层
-
-语言编码：Whisper-large-v3 提取语音文本，ALBERT 生成指令嵌入 flang
-
-跨模态注意力：Attention(Q=fscene, K=V=flang)
-
-2.双模推理引擎
-
-慢思考模式：基于逻辑模板的显式推理（如解析"右转避让"指令并计算安全转向角）
-
-快思考模式：6 层 Transformer Decoder 实现隐式推理，动态路由阈值 τ
-
-**三、Diffusion 轨迹优化模块的架构设计：**
-
-1.锚定扩散策略
-
-多模态锚点先验：通过 K-means 聚类预训练获取 K个典型驾驶模式锚点ak
-
-截断扩散过程：仅需 2 步去噪（原需 20 步），时间步从 t 开始反向过程
-
-2.级联扩散解码器
-
-注意力机制重构：轨迹坐标与 Action Token 通过交叉注意力交互
-
-轨迹解耦头：自车与他车轨迹联合优化
-
-# Model Code
-class RD-AD2VLA(nn.Module):
-
- def __init__(self):
- 
- super().__init__()
- 
- self.scene_encoder = SceneEncoder3DVLA() # 3D 场景
- 
- self.decision_maker = OpenVLADecisionModule() # 推理决策
- 
- self.trajectory_generator = AnchorDiffusionDrive() # 轨迹优化（锚定扩散策略）
- 
- def forward(self, sensor_data, lang_inst):
- 
- scene_feat = self.scene_encoder(sensor_data) # 传感器数据包含环视图像+LiDAR 点云
- 
- action_token = self.decision_maker(scene_feat, lang_inst) # 语言指令编码与多模态对齐
- 
- trajectory = self.trajectory_generator(action_token) # 生成联合轨迹
- 
- return trajectory
-
-# Data Format
-
-dataset_config = {
-
- "3D_scene": {
- 
- "sensors": {
- 
- "multi_cam": (6, 3, 256, 256), # 环视 6 相机图像
- 
- "lidar": (100000, 4), # 点云(x,y,z,反射强度)
- 
- "gaussian_params": { # 3D 高斯初始化参数
- 
- "positions": (100000, 3),
- 
- "covariance": (100000, 3, 3),
- 
- "sem_probs": (100000, 20)
- 
- }
-
- }
- 
- },
- 
- "language": {
- 
- "instruction": "str", # 自然语言指令
- 
- "speech_wav": (16000*5,) # 5 秒语音片段
- 
- },
- 
- "action": {
- 
- "trajectory": (51, 3), # 5 秒轨迹（10Hz）
- 
- "action_token": (64,) # 结构化动作编码
- 
- }
- 
+**Module 2: VLM Reasoning Module in Dual-System Architecture (GR00T N1 System 2)**
+***Input:***
+3D Gaussian scene tensor from Module 1.
+Navigation instructions (natural language, e.g., "Turn right into the ramp 300m ahead, maintain 60km/h").
+Real-time risk scores (collision probabilities of dynamic objects from Module 1).
+***Processing Pipeline:***
+1.Dual-Mode Intelligence Switching:
+Slow Thinking Mode (default):
+ Executes hierarchical reasoning (strategic → tactical → rule layers), processing time: 50-200ms.
+ Applicable to routine scenarios (car-following, lane changes, intersection navigation).
+Fast Thinking Mode (emergency):
+ Auto-triggered when risk score >0.7 (e.g., sudden pedestrian intrusion).
+ Bypasses strategic layer to invoke pre-trained emergency policy library (e.g., AEB trigger logic).
+ Response latency <20ms, outputs coarse-grained obstacle avoidance paths.
+2.Cross-Modal Alignment:
+Projects 3D Gaussian tensor into VLM token space (512D) for cross-attention computation with language instructions.
+3.Hierarchical Reasoning:
+Strategic Layer: Generates global paths (e.g., highway ramp vs. service road), time horizon: 30-60s.
+Tactical Layer: Plans local action sequences (e.g., overtaking, car-following, emergency avoidance), time horizon: 5-10s.
+Rule Layer: Validates compliance with traffic regulations (e.g., lane change legality at dashed lines) in real time (March 27, 2025).
+***Output:***
+Dual-Mode Joint Output:
+{
+  "mode": "slow" | "fast",  # Current decision mode
+  "trajectory": [...],       # Detailed path (slow) or avoidance path (fast)
+  "confidence": 0.92,        # Decision confidence
+  "emergency_override": True  # Whether active braking/steering is triggered
 }
+Interpretability Report (natural language, e.g., "Left truck blind spot detected; fast thinking mode activated").
 
-# Train Pipeline
-
-三阶段训练策略：
-
-**阶段 1：多模态联合训练（冻结场景编码器）**
-
-python train_VLA.py \
- --freeze_scene_encoder \
- --lang_aug mix_whisper_albert # 语音文本联合编码
-
-**阶段 2：端到端微调（全参数更新）**
-
-python finetune_full.py \
- --use_lora # 参数高效微调 \
- --quant 4bit # 4 比特量化部署优化
-
-**阶段 3：基于3DGS环境的强化学习**
-
-同“端到端+VLM”架构的RD-AD项目PPO实践~
+**Module 3: DIT + Flow Matching Action Generation (GR00T N1 System 1)**
+***Input:***
+Dual-mode output from Module 2.
+Real-time (March 27, 2025) vehicle states: Steering angle, wheel speed, yaw rate (CAN bus data at 10ms intervals).
+Physical constraints: Maximum steering angular rate, braking acceleration limits, etc.
+***Processing Pipeline:***
+1.Mode-Adaptive Flow Matching:
+Slow mode: Constructs manifold from current state to strategic path endpoint (time horizon: 1-5s).
+Fast mode: Constructs emergency obstacle avoidance manifold (time horizon: 0.2-0.5s; higher-order derivative constraints).
+2.DiT Diffusion Process:
+Initial noisy action sequence → Denoised progressively via 12-layer cross-attention DiT blocks.
+3.Control Command Fusion:
+Injects predefined safe control values (e.g., maximum braking force) when emergency_override=True.
+***Output:***
+Multimodal Control Commands (100Hz high-frequency output):
+[
+  {"t":0.00, "steer":0.12, "throttle":0.35, "brake":0.0, "mode":"slow"},
+  {"t":0.01, "steer":0.28, "throttle":0.0, "brake":0.8, "mode":"fast"},
+  ... # Dynamically blended control signals
+]
+Mode Switch Log: Records environmental snapshots and decision rationale for each fast-mode activation.
 
 # Code Organization
-
 RD-AD2VLA/
+├── configs/ # 模块化配置文件
+│ ├── gauss_encoder.yaml
+│ └── vlm_agent.yaml
+├── core/ # 核心算法实现
+│ ├── perception/ # 3D 高斯模块
+│ ├── cognition/ # VLM 双系统
+│ └── action/ # DIT+流匹配
+├── tools/
+│ ├── data_augment.py # Omniverse 合成数据工具[2]
+│ └── safety_check.py # ISO 26262 校验工具
+└── scripts/ # 训练/部署脚本
+│ ├── train_gauss.py # 阶段 1 训练
+│ └── train_vla.py # 阶段 2-3 训练
 
-├── models/
-
-│ ├── scene_encoder/ # 3D 场景编码组件
-
-│ ├── CoT-VLA/ # 多模态决策模块
-
-│ └── diffusion/ # 轨迹生成器
-
-├── data/
-
-│ ├── hybrid_dataset.py # 混合数据加载器
-
-│ └── transforms/ # 多模态数据增强
-
-├── configs/ # 训练配置文件
-
-├── scripts/ # 分布式训练启动脚本
-
-└── utils/
-
-│ ├── minkowski_ops.py # 稀疏卷积优化
- 
-│ └── fsdp_wrapper.py # PyTorch FSDP 封装
+# Plan
+Due to the fact that pre research is updated in spare time, it will be updated module by module from Q1 to Q4 of 2025.
 
 # License
 [MIT License](LICENSE)  
