@@ -9,7 +9,7 @@ Early-stage code framework. Core classes and logic are being implemented.
 
 # Overall Architecture
 
-**- Flowchart:**
+**※ Flowchart:**
 
 Multi-camera input → [3D Gaussian Scene Encoder] → 3D Semantic Gaussian Representation  
                       ↓  
