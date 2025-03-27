@@ -22,7 +22,7 @@ Multi-camera input → [3D Gaussian Scene Encoder] → 3D Semantic Gaussian Repr
 
 # Module 1: 3D Gaussian Scene Representation Encoding (GaussianAD 3DGS)
 
-**- Input:**
+**※ Input:**
 
 1.Multi-camera RGB images (6-8 surround-view cameras, resolution 1920×1080@30FPS)
 
@@ -30,7 +30,7 @@ Multi-camera input → [3D Gaussian Scene Encoder] → 3D Semantic Gaussian Repr
 
 3.Navigation map data (vectorized lane topology, speed limits, traffic light coordinates, etc.)
 
-**- Processing Pipeline:**
+**※ Processing Pipeline:**
 
 1.Gaussian Center Initialization:
 
@@ -56,7 +56,7 @@ Multi-camera input → [3D Gaussian Scene Encoder] → 3D Semantic Gaussian Repr
 
 3.3 Outputs displacement vector fields (Δx,Δy,Δz) and velocity changes for each Gaussian center over a 2-second horizon.
 
-**- Output:**
+**※ Output:**
 
 1.3D Gaussian Scene Tensor (dimension: N×15, where N = number of Gaussian centers; 15 dimensions include coordinates, covariance, semantic labels, etc.).
 
@@ -71,7 +71,7 @@ Multi-camera input → [3D Gaussian Scene Encoder] → 3D Semantic Gaussian Repr
 
 # Module 2: VLM Reasoning Module in Dual-System Architecture (GR00T N1 System 2)
 
-**- Input:**
+**※ Input:**
 
 1.3D Gaussian scene tensor from Module 1.
 
@@ -79,7 +79,7 @@ Multi-camera input → [3D Gaussian Scene Encoder] → 3D Semantic Gaussian Repr
 
 3.Real-time risk scores (collision probabilities of dynamic objects from Module 1).
 
-**- Processing Pipeline:**
+**※ Processing Pipeline:**
 
 1.Dual-Mode Intelligence Switching:
 
@@ -109,7 +109,7 @@ Multi-camera input → [3D Gaussian Scene Encoder] → 3D Semantic Gaussian Repr
 
 3.3 Rule Layer: Validates compliance with traffic regulations (e.g., lane change legality at dashed lines) in real time (March 27, 2025).
 
-**- Output:**
+**※ Output:**
 
 1.Dual-Mode Joint Output:
 
@@ -128,7 +128,7 @@ Multi-camera input → [3D Gaussian Scene Encoder] → 3D Semantic Gaussian Repr
 
 # Module 3: DIT + Flow Matching Action Generation (GR00T N1 System 1)
 
-**- Input:**
+**※ Input:**
 
 1.Dual-mode output from Module 2.
 
@@ -136,7 +136,7 @@ Multi-camera input → [3D Gaussian Scene Encoder] → 3D Semantic Gaussian Repr
 
 3.Physical constraints: Maximum steering angular rate, braking acceleration limits, etc.
 
-**- Processing Pipeline:**
+**※ Processing Pipeline:**
 
 1.Mode-Adaptive Flow Matching:
 
@@ -152,7 +152,7 @@ Multi-camera input → [3D Gaussian Scene Encoder] → 3D Semantic Gaussian Repr
 
 3.1 Injects predefined safe control values (e.g., maximum braking force) when emergency_override=True.
 
-**- Output:**
+**※ Output:**
 
 1.Multimodal Control Commands (100Hz high-frequency output):
 
@@ -181,11 +181,11 @@ RD-AD2VLA/
 
 ├── models/
 
-│ ├── perception/
+│ ├── scene_encoder/
 
-│ ├── cognition/
+│ ├── cot-VLM/
 
-│ └── action/
+│ └── diffusion/
 
 ├── utils/
 
