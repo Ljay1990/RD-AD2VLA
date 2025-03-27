@@ -42,11 +42,11 @@ Multi-camera input → [3D Gaussian Scene Encoder] → 3D Semantic Gaussian Repr
 
 2.1 Each Gaussian center carries:
 
-  Geometric attributes: Covariance matrix (controls ellipsoid shape), opacity.
+  --Geometric attributes: Covariance matrix (controls ellipsoid shape), opacity.
  
-  Semantic attributes: Class (vehicle/pedestrian/obstacle), motion states (velocity, acceleration).
+  --Semantic attributes: Class (vehicle/pedestrian/obstacle), motion states (velocity, acceleration).
  
-  Physical attributes: Surface material (affects braking distance calculation).
+  --Physical attributes: Surface material (affects braking distance calculation).
  
 3.Dynamic Update Mechanism:
 
@@ -62,11 +62,11 @@ Multi-camera input → [3D Gaussian Scene Encoder] → 3D Semantic Gaussian Repr
 
 2.Key Semantic Features:
 
-  Road structure: Lane curvature, drivable area masks.
+  --Road structure: Lane curvature, drivable area masks.
  
-  Dynamic objects: Trajectory predictions for surrounding vehicles, pedestrian intent classification (probability distribution).
+  --Dynamic objects: Trajectory predictions for surrounding vehicles, pedestrian intent classification (probability distribution).
  
-  Environmental states: Road friction coefficient estimation, visibility score.
+  --Environmental states: Road friction coefficient estimation, visibility score.
  
 
 # Module 2: VLM Reasoning Module in Dual-System Architecture (GR00T N1 System 2)
@@ -85,21 +85,21 @@ Multi-camera input → [3D Gaussian Scene Encoder] → 3D Semantic Gaussian Repr
 
 1.1 Slow Thinking Mode (default):
 
-  Executes hierarchical reasoning (strategic → tactical → rule layers), processing time: 50-200ms.
+  --Executes hierarchical reasoning (strategic → tactical → rule layers), processing time: 50-200ms.
  
-  Applicable to routine scenarios (car-following, lane changes, intersection navigation).
+  --Applicable to routine scenarios (car-following, lane changes, intersection navigation).
  
 1.2 Fast Thinking Mode (emergency):
 
-  Auto-triggered when risk score >0.7 (e.g., sudden pedestrian intrusion).
+  --Auto-triggered when risk score >0.7 (e.g., sudden pedestrian intrusion).
  
-  Bypasses strategic layer to invoke pre-trained emergency policy library (e.g., AEB trigger logic).
+  --Bypasses strategic layer to invoke pre-trained emergency policy library (e.g., AEB trigger logic).
  
-  Response latency <20ms, outputs coarse-grained obstacle avoidance paths.
+  --Response latency <20ms, outputs coarse-grained obstacle avoidance paths.
  
 2.Cross-Modal Alignment:
 
-Projects 3D Gaussian tensor into VLM token space (512D) for cross-attention computation with language instructions.
+2.1 Projects 3D Gaussian tensor into VLM token space (512D) for cross-attention computation with language instructions.
 
 3.Hierarchical Reasoning:
 
