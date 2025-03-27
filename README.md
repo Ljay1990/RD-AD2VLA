@@ -2,8 +2,10 @@
 Pre-research on VLA. R(einforcement learning)D(ual stream)-AD's "closed-loop evaluation" and "reinforcement learning" can be reused.
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15073856.svg)](https://doi.org/10.5281/zenodo.15073856)
 
+
 # Status
 Early-stage code framework. Core classes and logic are being implemented.  
+
 
 # Overall Architecture
 
@@ -17,9 +19,10 @@ Multi-camera input → [3D Gaussian Scene Encoder] → 3D Semantic Gaussian Repr
                       ↓  
 [System 1: DIT + Flow Matching Action Generation] → Vehicle Control Commands (steering angle, throttle, brake, etc.)  
 
-**Module 1: 3D Gaussian Scene Representation Encoding (GaussianAD 3DGS)**
 
-***Input:***
+# Module 1: 3D Gaussian Scene Representation Encoding (GaussianAD 3DGS)
+
+**Input:**
 
 Multi-camera RGB images (6-8 surround-view cameras, resolution 1920×1080@30FPS)
 
@@ -27,7 +30,7 @@ LiDAR point cloud (optional, for initializing Gaussian centers)
 
 Navigation map data (vectorized lane topology, speed limits, traffic light coordinates, etc.)
 
-***Processing Pipeline:***
+**Processing Pipeline:**
 
 1.Gaussian Center Initialization:
 
@@ -53,7 +56,7 @@ Motion correlations are modeled across time (5 historical frames) and space (adj
 
 Outputs displacement vector fields (Δx,Δy,Δz) and velocity changes for each Gaussian center over a 2-second horizon.
 
-***Output:***
+**Output:**
 
 3D Gaussian Scene Tensor (dimension: N×15, where N = number of Gaussian centers; 15 dimensions include coordinates, covariance, semantic labels, etc.).
 
@@ -64,10 +67,11 @@ Key Semantic Features:
  Dynamic objects: Trajectory predictions for surrounding vehicles, pedestrian intent classification (probability distribution).
  
  Environmental states: Road friction coefficient estimation, visibility score.
+ 
 
-**Module 2: VLM Reasoning Module in Dual-System Architecture (GR00T N1 System 2)**
+# Module 2: VLM Reasoning Module in Dual-System Architecture (GR00T N1 System 2)
 
-***Input:***
+**Input:**
 
 3D Gaussian scene tensor from Module 1.
 
@@ -75,7 +79,7 @@ Navigation instructions (natural language, e.g., "Turn right into the ramp 300m 
 
 Real-time risk scores (collision probabilities of dynamic objects from Module 1).
 
-***Processing Pipeline:***
+**Processing Pipeline:**
 
 1.Dual-Mode Intelligence Switching:
 
@@ -105,7 +109,7 @@ Tactical Layer: Plans local action sequences (e.g., overtaking, car-following, e
 
 Rule Layer: Validates compliance with traffic regulations (e.g., lane change legality at dashed lines) in real time (March 27, 2025).
 
-***Output:***
+**Output:**
 
 Dual-Mode Joint Output:
 
@@ -121,9 +125,10 @@ Dual-Mode Joint Output:
 
 Interpretability Report (natural language, e.g., "Left truck blind spot detected; fast thinking mode activated").
 
-**Module 3: DIT + Flow Matching Action Generation (GR00T N1 System 1)**
 
-***Input:***
+# Module 3: DIT + Flow Matching Action Generation (GR00T N1 System 1)
+
+**Input:**
 
 Dual-mode output from Module 2.
 
@@ -131,7 +136,7 @@ Real-time (March 27, 2025) vehicle states: Steering angle, wheel speed, yaw rate
 
 Physical constraints: Maximum steering angular rate, braking acceleration limits, etc.
 
-***Processing Pipeline:***
+**Processing Pipeline:**
 
 1.Mode-Adaptive Flow Matching:
 
@@ -147,7 +152,7 @@ Initial noisy action sequence → Denoised progressively via 12-layer cross-atte
 
 Injects predefined safe control values (e.g., maximum braking force) when emergency_override=True.
 
-***Output:***
+**Output:**
 
 Multimodal Control Commands (100Hz high-frequency output):
 
@@ -160,6 +165,7 @@ Multimodal Control Commands (100Hz high-frequency output):
 ]
 
 Mode Switch Log: Records environmental snapshots and decision rationale for each fast-mode activation.
+
 
 # Code Organization
 
@@ -191,8 +197,10 @@ RD-AD2VLA/
 
 │ └── train_vla.py
 
+
 # Plan
 Due to the fact that pre research is updated in spare time, it will be updated module by module from Q1 to Q4 of 2025.
+
 
 # License
 [MIT License](LICENSE)  
